@@ -8,43 +8,36 @@
 // #define gotoxy(x, y) printf("\033[%d;%dH", y, x)
 
 int main(){
-	// int a = 5, b = 6;
-	// printf("HELLO WORLD\n");
-	// printf("++a: %d,a: %d\n", ++a,a);
-	// printf("a++: %d,a: %d\n", a++,a);
-	// printf("--a: %d,a: %d\n", --a,a);
-	// printf("a--: %d,a: %d\n", a--,a);
-	getchar();
-    printf("Printing current dir\n");
-	char cwd[100];
-	if(getcwd(cwd, sizeof(cwd)) != NULL){
-		printf("%s\n", cwd);
+	//clear() already works
+	
+	char str[255];
+	char command[5];
+	char *token;
+	printf("Type some stuff: ");
+	fgets(str, 255, stdin);
+	token = strtok(str, " ");
+	strcpy(command, token);
+	printf("Command is %s\n", command);
+	token = strtok(NULL, " ");
+	while(token != NULL) {
+		printf("%s\n", token);
+		token = strtok(NULL, " ");
 	}
-	getchar();
-	clear();
-	getchar();
-	// gotoxy(5, 6);
-    showsomething();
-	getchar();
-    // print_env_vars();
-    // getchar();
-
-    char str[] = "A clever fox jumped over a lazy dog";
-    // printf("-------%s", &str);
-    char *token = strtok(str, " ");
-    
-    do{
-		// token = strtok(str, " ");
-        printf("%s\n", token);
-        token = strtok(NULL, " ");
-    }while(token != NULL);
-
-	return 0;
+        if (strcmp(command, "cd") == 0 || strcmp(command, "cd\n") == 0){
+		printcwd();
+	}
+    	//showsomething();
 }
 
-void print_env_vars(){
+void print_env_vars() {
     // const char* s = getenv("USER");
     const char* s = getenv("PATH");
     printf("%s\n", (s != NULL) ? s : "");
 }
 
+void printcwd() {
+	char cwd[100];
+	if(getcwd(cwd, sizeof(cwd)) != NULL){
+		printf("%s\n", cwd);
+	}
+}
