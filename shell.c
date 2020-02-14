@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -11,8 +12,10 @@
 int main(int argc, char *argv[], char **envp){
 	//clear() already works
 	char str[255];
+	int pid;
 	char command[5];
 	char cwd[100];
+	char shell[100];
 	char args[256][256];
 	int argCount = 0;
 	char *token;
@@ -20,6 +23,7 @@ int main(int argc, char *argv[], char **envp){
 	{
 	if (getcwd(cwd, sizeof(cwd)) != NULL) 
 	{
+		strcpy(shell, cwd);
 	}
 	printf("%s$ ", cwd);
 	fgets(str, 255, stdin);
@@ -111,9 +115,17 @@ int main(int argc, char *argv[], char **envp){
 	}
 	else
 	{
-		printf("***\nUnknown command. Invoking %s on native bash.\n", command);
-		system(command);
-		printf("***\n");
+		int status;
+		printf("Unknown command. Invoking %s on native bash.\n", command);
+		pid = fork();
+		if (pid > 0)
+		{
+			waitpid(pid, &status, 0);
+		}
+		else
+		{
+		execl(shell, command, NULL);
+		}
 	}
 	memset(args, 0, sizeof(args));
 	memset(str, 0, 255);
