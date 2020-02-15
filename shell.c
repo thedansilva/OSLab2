@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include "shell.h"
 
+
 #define clear() printf("\033[H\033[J")
 // #define gotoxy(x, y) printf("\033[%d;%dH", y, x)
 
@@ -28,6 +29,8 @@ int main(int argc, char *argv[], char **envp){
 	printf("%s$ ", cwd);
 	fgets(str, 255, stdin);
 	str[strcspn(str, "\n")] = 0; //remove trailing new line from string before tokenizing
+	char orginal[255];
+	strcpy(orginal, str);
 	token = strtok(str, " ");
 	argCount = 0;
 	strcpy(command, token);
@@ -41,6 +44,18 @@ int main(int argc, char *argv[], char **envp){
 			argCount++;
 		}
 
+	}
+	int batch = 0;
+	if(strlen(command)>3){
+	char subbuff[4];
+	memcpy(subbuff,&command[strlen(command)-3],3);
+	subbuff[3]='\0';
+	char subbuff2[3];
+	memcpy(subbuff2,&command[0],2);
+	subbuff2[2]='\0';
+		if(strcmp(subbuff, ".sh")==0 && strcmp(subbuff2,"./")==0){
+			batch =1;
+		}
 	}
 	if (strcmp(command, "cd") == 0 || strcmp(command, "cd\n") == 0) 
 	{
@@ -112,6 +127,9 @@ int main(int argc, char *argv[], char **envp){
 	else if (strcmp(command, "quit") == 0 || strcmp(command, "quit\n") == 0)
 	{
 		return 0;
+	}
+	else if(batch==1){
+		system(orginal);
 	}
 	else
 	{
