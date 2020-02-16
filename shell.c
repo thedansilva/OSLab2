@@ -45,6 +45,8 @@ int main(int argc, char *argv[], char **envp){
 		}
 
 	}
+	int pid;
+	int forking = 0;
 	int batch = 0;
 	if(strlen(command)>3){
 	char subbuff[4];
@@ -53,64 +55,211 @@ int main(int argc, char *argv[], char **envp){
 	char subbuff2[3];
 	memcpy(subbuff2,&command[0],2);
 	subbuff2[2]='\0';
-		if(strcmp(subbuff, ".sh")==0 && strcmp(subbuff2,"./")==0){
-			batch =1;
+		if(strcmp(subbuff, ".sh")==0 && strcmp(subbuff2,"./")==0)
+		{
+		batch =1;
 		}
+	}
+	if (strcmp(args[argCount - 1], "&") == 0 || strcmp(args[argCount], "&") == 0)
+	{
+		forking = 1;
 	}
 	if (strcmp(command, "cd") == 0 || strcmp(command, "cd\n") == 0) 
 	{
-		if(strlen(args[0]) <= 0) { //if there's no input past 'cd'
-			printcwd();
-		}
-		else {
-			if (chdir(args[0]) == 0) 
+		if (forking) 
+		{
+			pid = fork();
+			if (pid <= 0) 
 			{
-			} else printf("Directory %s not found\n", args[0]);
+				int old_stdout = dup(1);
+				freopen("/dev/null", "w", stdout);
+				if(strlen(args[0]) <= 0) { //if there's no input past 'cd'
+					printcwd;
+				} else printf("Directory %s not found\n", args[0]);
+				fclose(stdout);
+				stdout = fdopen(old_stdout, "w");
+				exit(0);
+			}
+			while ((pid = wait(NULL)) == -1) {
+			printf("Process %d done.\n", pid);
+			}
+		}
+		else 
+		{	
+			if(strlen(args[0]) <= 0) { //if there's no input past 'cd'
+				printcwd();
+			}
+			else
+			{
+				if (chdir(args[0]) == 0) 
+				{
+				} else printf("Directory %s not found\n", args[0]);
+			}
 		}
 	}
 	else if (strcmp(command, "cls") == 0 || strcmp(command, "cls\n") == 0)
 	{
-		clear();
-	}
-	else if (strcmp(command, "dir") == 0 || strcmp(command, "dir\n") == 0)
-	{
-		DIR *dir;
-		struct dirent *dirent;
-		if (strlen(args[0]) <= 0) 
+		if (forking)
 		{
-		dir = opendir(".");
+			pid = fork();
+			if (pid <= 0)
+			{
+				int old_stdout = dup(1);
+				freopen("dev/null", "w", stdout);
+				clear();
+				fclose(stdout);
+				stdout = fdopen(old_stdout, "w");
+				exit(0);
+			}
+			while ((pid = wait(NULL)) == -1) {
+				printf("Process %d done.\n", pid);
+			}
 		}
 		else
 		{
-		dir = opendir(args[0]);
+			clear();
 		}
-		if (dir) 
+	}
+	else if (strcmp(command, "dir") == 0 || strcmp(command, "dir\n") == 0)
+	{
+		if (forking)
 		{
-			while ((dirent = readdir(dir)) != NULL)
+			pid = fork();
+			if (pid <= 0)
+			{
+				int old_stdout = dup(1);
+				freopen("dev/null", "w", stdout);
+				DIR *dir;
+				struct dirent *dirent;
+				if (strlen(args[0]) <= 0) 
 				{
-				printf("%s\n", dirent->d_name);
+				dir = opendir(".");
 				}
-			closedir(dir);
-		}	
+				else
+				{
+				dir = opendir(args[0]);
+				}
+				if (dir) 
+				{
+					while ((dirent = readdir(dir)) != NULL)
+						{
+						printf("%s\n", dirent->d_name);
+						}
+					closedir(dir);
+				}
+				fclose(stdout);
+				stdout = fdopen(old_stdout, "w");
+				exit(0);
+			}
+			while ((pid = wait(NULL)) == -1) {
+				printf("Process %d done.\n", pid);
+			}
+		}
+		else
+		{
+				DIR *dir;
+				struct dirent *dirent;
+				if (strlen(args[0]) <= 0) 
+				{
+				dir = opendir(".");
+				}
+				else
+				{
+				dir = opendir(args[0]);
+				}
+				if (dir) 
+				{
+					while ((dirent = readdir(dir)) != NULL)
+						{
+						printf("%s\n", dirent->d_name);
+						}
+					closedir(dir);
+				}
+
+		}
 	}
 	else if (strcmp(command, "environ") == 0 || strcmp(command, "environ\n") == 0)
 	{
-		for (char **env = envp; *env != 0; env++)
+		if (forking)
 		{
-			char *thisEnv = *env;
-			printf("%s\n", thisEnv);    
+			pid = fork();
+			if (pid <= 0)
+			{
+				int old_stdout = dup(1);
+				freopen("dev/null", "w", stdout);
+				for (char **env = envp; *env != 0; env++)
+				{
+					char *thisEnv = *env;
+					printf("%s\n", thisEnv);    
+				}
+				fclose(stdout);
+				stdout = fdopen(old_stdout, "w");
+				exit(0);
+			}
+			while ((pid = wait(NULL)) == -1) {
+				printf("Process %d done.\n", pid);
+			}
 		}
-	}
+		else
+		{
+			for (char **env = envp; *env != 0; env++)
+			{
+				char *thisEnv = *env;
+				printf("%s\n", thisEnv);    
+			}
+		}
+		}
 	else if (strcmp(command, "echo") == 0 || strcmp(command, "echo\n") == 0)
 	{
-		for(int i = 0; i < argCount; i++) {
-			printf("%s ", args[i]);
+		if (forking)
+		{
+			pid = fork();
+			if (pid <= 0)
+			{
+				int old_stdout = dup(1);
+				freopen("dev/null", "w", stdout);
+				for(int i = 0; i < argCount; i++) {
+					printf("%s ", args[i]);
+				}
+				printf("\n");
+				fclose(stdout);
+				stdout = fdopen(old_stdout, "w");
+				exit(0);
+			}
+			while ((pid = wait(NULL)) == -1) {
+				printf("Process %d done.\n", pid);
+			}
 		}
-		printf("\n");
+		else
+		{
+			for(int i = 0; i < argCount; i++) {
+				printf("%s ", args[i]);
+			}
+			printf("\n");
+		}
 	}
 	else if (strcmp(command, "help") == 0 || strcmp(command, "pause\n") == 0)
 	{
-		help();
+		if (forking)
+		{
+		pid = fork();
+		if (pid <= 0)
+		{
+			int old_stdout = dup(1);
+			freopen("dev/null", "w", stdout);
+			help();
+			fclose(stdout);
+			stdout = fdopen(old_stdout, "w");
+			exit(0);
+		}
+		while ((pid = wait(NULL)) == -1) {
+			printf("Process %d done.\n", pid);
+		}
+		}
+		else
+		{
+			help();
+		}
 	}
 	else if (strcmp(command, "pause") == 0 || strcmp(command, "pause\n") == 0)
 	{
