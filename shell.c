@@ -335,7 +335,7 @@ int main(int argc, char *argv[], char **envp){
 		}
 	}
 	
-	 else if (strcmp(command, "help") == 0 || strcmp(command, "pause\n") == 0)
+	 else if (strcmp(command, "help") == 0 || strcmp(command, "help\n") == 0)
 	{
 		if (forking)
 		{
